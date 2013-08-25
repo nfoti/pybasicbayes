@@ -76,10 +76,14 @@ class _GaussianBase(Distribution):
     def log_likelihood(self,x):
         mu, sigma, D = self.mu, self.sigma, self.D
         sigma_chol = self.sigma_chol
-        x = np.reshape(x,(-1,D)) - mu
+        x = x.reshape((-1,D))
+        bads = np.isnan(x).any(axis=1)
+        x = np.nan_to_num(x - mu)
         xs = scipy.linalg.solve_triangular(sigma_chol,x.T,lower=True)
-        return -1./2. * inner1d(xs.T,xs.T) - D/2*np.log(2*np.pi) \
+        out = -1./2. * inner1d(xs.T,xs.T) - D/2*np.log(2*np.pi) \
                 - np.log(sigma_chol.diagonal()).sum()
+        out[bads] = 0
+        return out
 
     ### plotting
 
